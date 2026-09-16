@@ -1,0 +1,13 @@
+markitdown[all]
+fastapi
+uvicorn
+requests
+python-multipart
+youtube-transcript-api
+extract-msg
+feedparser
+wikipedia-api
+beautifulsoup4
+pywebview
+openai
+pymupdf4llm

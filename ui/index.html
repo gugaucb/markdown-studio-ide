@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="app_title">MarkItDown Studio IDE - Universal Markdown Transformer</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Marked.js for Live Markdown Rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Highlight.js for Syntax Highlighting in Preview -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css?v=1.4.0">
+</head>
+<body class="dark-theme">
+    <div id="app" class="ide-container">
+        <!-- TOP HEADER NAVBAR -->
+        <header class="top-navbar">
+            <div class="brand">
+                <i class="fa-solid fa-file-code brand-icon"></i>
+                <span class="brand-name">MarkItDown <span class="brand-highlight">Studio IDE</span></span>
+                <span class="version-tag" data-i18n="version">v1.0</span>
+            </div>
+            
+            <div class="system-status">
+                <div class="status-pill" id="llmStatusPill" title="AI Status">
+                    <span class="status-dot disabled"></span>
+                    <span class="status-text" data-i18n="llm_disabled">AI Disabled (No Key/Endpoint)</span>
+                </div>
+            </div>
+
+            <div class="navbar-actions">
+                <!-- AI USAGE TOGGLE SWITCH -->
+                <div class="llm-toggle-container" data-i18n-title="use_ai_hint" title="Enable/disable AI (Ollama / OpenAI) for conversion, table preservation, and document refinement">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggleUseLlm" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <label for="toggleUseLlm" class="toggle-label">
+                        <i class="fa-solid fa-wand-magic-sparkles toggle-icon"></i>
+                        <span data-i18n="use_ai">Use AI</span>
+                    </label>
+                </div>
+
+                <button class="nav-btn" id="btnOpenUrlModal" data-i18n-title="convert_url_hint" title="Convert Web URL (YouTube, Wikipedia, RSS, HTML)">
+                    <i class="fa-solid fa-globe"></i> <span data-i18n="convert_url">Convert URL</span>
+                </button>
+                <button class="nav-btn primary" id="btnTriggerUpload" data-i18n-title="open_files_hint" title="Convert Local Documents">
+                    <i class="fa-solid fa-file-upload"></i> <span data-i18n="open_files">Open Files</span>
+                </button>
+                <button class="nav-btn icon-only" id="btnOpenSettings" data-i18n-title="settings_title" title="Settings & API Configuration">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+
+                <!-- LANGUAGE SELECTOR -->
+                <div class="lang-selector-group" id="langSelectorGroup">
+                    <button type="button" class="lang-switch-btn active" data-lang="en-US" title="English">EN</button>
+                    <button type="button" class="lang-switch-btn" data-lang="pt-BR" title="Português (Brasil)">PT</button>
+                    <button type="button" class="lang-switch-btn" data-lang="zh-CN" title="简体中文">中文</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN IDE WORKSPACE LAYOUT -->
+        <div class="ide-body">
+            <!-- LEFT SIDEBAR: FILE EXPLORER & CATEGORIES -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <span class="sidebar-title"><i class="fa-solid fa-folder-tree"></i> Explorador</span>
+                    <button class="btn-icon-subtle" id="btnClearQueue" title="Limpar Lista">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+
+                <!-- CATEGORY FILTER BUTTONS -->
+                <div class="category-filters">
+                    <button class="cat-chip active" data-cat="all"><i class="fa-solid fa-border-all"></i> Todos</button>
+                    <button class="cat-chip" data-cat="docs"><i class="fa-solid fa-file-word"></i> Docs</button>
+                    <button class="cat-chip" data-cat="web"><i class="fa-brands fa-youtube"></i> Web/YT</button>
+                    <button class="cat-chip" data-cat="data"><i class="fa-solid fa-table"></i> Dados</button>
+                    <button class="cat-chip" data-cat="media"><i class="fa-solid fa-image"></i> Mídia</button>
+                    <button class="cat-chip" data-cat="archive"><i class="fa-solid fa-file-zipper"></i> Zip/eBook</button>
+                    <button class="cat-chip" data-cat="other"><i class="fa-solid fa-envelope"></i> Email/RSS</button>
+                </div>
+
+                <!-- FILE DROP ZONE -->
+                <div class="drop-zone" id="dropZone">
+                    <input type="file" id="fileInput" multiple style="display: none;">
+                    <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+                    <p class="drop-text">Arraste arquivos aqui ou <span class="browse-link">clique para selecionar</span></p>
+                    <span class="drop-hint">PDF, DOCX, PPTX, XLSX, CSV, JSON, XML, PNG, MP3, EPUB, ZIP, MSG</span>
+                </div>
+
+                <!-- CONVERTED ITEMS TREE LIST -->
+                <div class="file-list-container">
+                    <div class="section-label">Documentos Convertidos (<span id="convertedCount">0</span>)</div>
+                    <ul class="file-tree" id="fileTree">
+                        <!-- Dynamic items rendered here -->
+                        <li class="empty-state">
+                            <i class="fa-solid fa-folder-open"></i>
+                            <p>Nenhum arquivo convertido ainda</p>
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- CENTER MAIN EDITOR & PREVIEW WORKSPACE -->
+            <main class="editor-workspace">
+                <!-- TAB BAR -->
+                <div class="tab-bar" id="tabBar">
+                    <!-- Dynamic Tabs Rendered Here -->
+                    <div class="tab active" data-tab-id="welcome">
+                        <i class="fa-solid fa-file-lines tab-icon"></i>
+                        <span class="tab-title">Bem-vindo.md</span>
+                    </div>
+                </div>
+
+                <!-- EDITOR TOOLBAR -->
+                <div class="workspace-toolbar">
+                    <div class="view-toggles">
+                        <button class="tool-btn active" id="btnSplitView" title="Visão Dividida (Editor + Preview)">
+                            <i class="fa-solid fa-columns"></i> Split
+                        </button>
+                        <button class="tool-btn" id="btnEditorOnly" title="Apenas Editor">
+                            <i class="fa-solid fa-code"></i> Editor
+                        </button>
+                        <button class="tool-btn" id="btnPreviewOnly" title="Apenas Renderização">
+                            <i class="fa-solid fa-eye"></i> Preview
+                        </button>
+                    </div>
+
+                    <div class="doc-metrics" id="docMetrics">
+                        <span><i class="fa-solid fa-font"></i> <strong id="metricChars">0</strong> chars</span>
+                        <span><i class="fa-solid fa-align-left"></i> <strong id="metricWords">0</strong> palavras</span>
+                        <span><i class="fa-solid fa-lines-leaning"></i> <strong id="metricLines">0</strong> linhas</span>
+                        <span id="metricAiUsage" class="metric-ai-badge" style="display: none;" title="Processado com Inteligência Artificial">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> <strong id="metricAiModel">IA</strong>
+                        </span>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="tool-action-btn" id="btnCopyMarkdown" title="Copiar Markdown">
+                            <i class="fa-regular fa-copy"></i> Copiar
+                        </button>
+                        <button class="tool-action-btn" id="btnExportMd" title="Baixar arquivo Markdown diretamente pelo navegador">
+                            <i class="fa-solid fa-download"></i> Download via Browser
+                        </button>
+                        <button class="tool-action-btn primary" id="btnExportLocalMd" title="Salvar diretamente na pasta local pré-definida (exports/)">
+                            <i class="fa-solid fa-file-export"></i> Exportar .md
+                        </button>
+                        <button class="tool-action-btn" id="btnExportHtml" title="Exportar HTML">
+                            <i class="fa-solid fa-file-code"></i> HTML
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PROCESSING SPINNER OVERLAY -->
+                <div class="processing-overlay" id="processingOverlay" style="display: none;">
+                    <div class="spinner-card">
+                        <div class="spinner-icon-wrapper">
+                            <i class="fa-solid fa-circle-notch fa-spin spinner-icon"></i>
+                            <i class="fa-solid fa-wand-magic-sparkles spinner-sparkle"></i>
+                        </div>
+                        <h4 id="spinnerTitle" class="spinner-title">Processando documento...</h4>
+                        <p id="spinnerSubtitle" class="spinner-subtitle">Convertendo e refinando com IA (gemma4:26b)...</p>
+                        <div class="spinner-shimmer-bar">
+                            <div class="spinner-shimmer-fill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CANVAS PANES (SPLIT VIEW) -->
+                <div class="canvas-split" id="canvasSplit">
+                    <!-- LEFT PANE: RAW MARKDOWN CODE EDITOR -->
+                    <div class="pane editor-pane" id="editorPane">
+                        <div class="editor-header">
+                            <span><i class="fa-solid fa-pen-to-square"></i> Editor Markdown</span>
+                        </div>
+                        <div class="editor-wrapper">
+                            <div class="line-numbers" id="lineNumbers">1</div>
+                            <textarea id="markdownEditor" spellcheck="false" placeholder="Selecione ou converta um documento para editar seu código Markdown..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- RESIZER HANDLE -->
+                    <div class="pane-resizer" id="paneResizer"></div>
+
+                    <!-- RIGHT PANE: LIVE HTML RENDER PREVIEW -->
+                    <div class="pane preview-pane" id="previewPane">
+                        <div class="preview-header">
+                            <span><i class="fa-solid fa-desktop"></i> Renderização em Tempo Real</span>
+                        </div>
+                        <div class="markdown-rendered" id="markdownPreview">
+                            <!-- Rendered Markdown HTML goes here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOTTOM TERMINAL LOG CONSOLE -->
+                <div class="bottom-terminal" id="bottomTerminal">
+                    <div class="terminal-header">
+                        <div class="terminal-title" id="toggleTerminalBtn">
+                            <i class="fa-solid fa-terminal"></i> Console de Conversão & Logs
+                            <span class="badge" id="logBadge">0</span>
+                        </div>
+                        <div class="terminal-actions">
+                            <button class="btn-icon-subtle" id="btnClearLogs" title="Limpar Logs"><i class="fa-solid fa-ban"></i></button>
+                            <button class="btn-icon-subtle" id="btnMinimizeTerminal" title="Minimizar/Expandir Terminal"><i class="fa-solid fa-chevron-down"></i></button>
+                        </div>
+                    </div>
+                    <div class="terminal-content" id="terminalConsole">
+                        <div class="log-entry info">[SISTEMA] MarkItDown Studio IDE iniciado com sucesso. Aguardando arquivos ou URLs...</div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- URL CONVERTER MODAL -->
+    <div class="modal-overlay" id="urlModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-globe"></i> Converter URL Web ou Mídia</h3>
+                <button class="modal-close" id="btnCloseUrlModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <label for="urlInput">Cole o Link de Destino:</label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-link"></i>
+                    <input type="url" id="urlInput" placeholder="https://youtube.com/watch?v=... ou Wikipedia ou RSS Feed...">
+                </div>
+                <div class="url-type-hints">
+                    <span class="url-hint-tag"><i class="fa-brands fa-youtube"></i> YouTube (Transcrição)</span>
+                    <span class="url-hint-tag"><i class="fa-brands fa-wikipedia-w"></i> Wikipedia</span>
+                    <span class="url-hint-tag"><i class="fa-solid fa-rss"></i> Feed RSS</span>
+                    <span class="url-hint-tag"><i class="fa-solid fa-code"></i> Página HTML</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nav-btn" id="btnCancelUrl">Cancelar</button>
+                <button class="nav-btn primary" id="btnSubmitUrl"><i class="fa-solid fa-bolt"></i> Converter para Markdown</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-gear"></i> Configurações do Provedor de IA</h3>
+                <button class="modal-close" id="btnCloseSettingsModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">Configure seu provedor compatível com o padrão OpenAI (OpenAI, Ollama, OpenRouter, Groq, LM Studio, etc.) para habilitar OCR inteligente em imagens, descrições multimodais e transcrição avançada de áudio.</p>
+
+                <label for="apiBaseUrlInput">URL da API OpenAI-compatível (Opcional):</label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-network-wired"></i>
+                    <input type="url" id="apiBaseUrlInput" placeholder="Padrão: https://api.openai.com/v1 (ou http://127.0.0.1:11434/v1)">
+                </div>
+                <div class="settings-hints">
+                    <span class="url-hint-tag" data-url="http://127.0.0.1:11434/v1">Ollama (127.0.0.1)</span>
+                    <span class="url-hint-tag" data-url="http://localhost:11434/v1">Ollama (localhost)</span>
+                    <span class="url-hint-tag" data-url="https://api.openai.com/v1">OpenAI Oficial</span>
+                    <span class="url-hint-tag" data-url="https://openrouter.ai/api/v1">OpenRouter</span>
+                    <span class="url-hint-tag" data-url="https://api.groq.com/openai/v1">Groq</span>
+                </div>
+
+                <label for="apiKeyInput" style="margin-top: 10px;">Chave da API (sk-... ou vazia p/ Ollama local):</label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-key"></i>
+                    <input type="password" id="apiKeyInput" placeholder="sk-proj-... (ou deixe vazio para Ollama local)">
+                </div>
+
+                <label for="llmModelInput" style="margin-top: 10px;">Modelo de IA / Multimodal:</label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-microchip"></i>
+                    <input type="text" id="llmModelInput" list="llmModelList" placeholder="Ex: gemma4:26b, gemma4:e4b, gpt-4o, llama-3.3-70b-versatile">
+                </div>
+                <datalist id="llmModelList">
+                    <option value="gemma4:26b">gemma4:26b (Ollama Local - 26B Parâmetros - Recomendado)</option>
+                    <option value="gemma4:e4b">gemma4:e4b (Ollama Local - 8B Parâmetros)</option>
+                    <option value="gpt-4o">gpt-4o (OpenAI - OCR e Visão)</option>
+                    <option value="gpt-4o-mini">gpt-4o-mini (OpenAI - Rápido e Econômico)</option>
+                    <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile (Groq / OpenRouter)</option>
+                    <option value="llama-3.2-11b-vision-preview">llama-3.2-11b-vision-preview (Groq - Visão)</option>
+                    <option value="llava">llava (Ollama - Multimodal Local)</option>
+                    <option value="qwen2.5:7b">qwen2.5:7b (Ollama Local)</option>
+                    <option value="deepseek-chat">deepseek-chat (DeepSeek)</option>
+                    <option value="anthropic/claude-3.5-sonnet">anthropic/claude-3.5-sonnet (OpenRouter)</option>
+                </datalist>
+
+                <!-- Feedback do Teste de Conexão -->
+                <div id="llmTestFeedback" class="llm-test-feedback hidden"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="nav-btn" id="btnTestSettings" type="button" title="Testar se o endpoint e modelo respondem"><i class="fa-solid fa-vial"></i> Testar Conexão</button>
+                <button class="nav-btn" id="btnCancelSettings">Cancelar</button>
+                <button class="nav-btn primary" id="btnSaveSettings"><i class="fa-solid fa-floppy-disk"></i> Salvar Configurações</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- i18n and Application Scripts -->
+    <script src="/static/i18n.js?v=1.0.0"></script>
+    <script src="/static/app.js?v=1.4.0"></script>
+</body>
+</html>
