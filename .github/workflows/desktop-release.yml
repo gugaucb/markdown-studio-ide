@@ -1,0 +1,117 @@
+name: Desktop Release Packaging
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Windows Installer (x64)
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run automated test suite
+        run: pytest
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Build standalone desktop binary
+        run: python scripts/build_desktop.py --test
+
+      - name: Compile Inno Setup installer (.exe)
+        shell: pwsh
+        run: |
+          $version = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME.TrimStart('v') } else { (Get-Content version.py | Select-String '__version__\s*=\s*"([^"]+)"').Matches.Groups[1].Value }
+          Write-Host "Building Windows installer for version: $version"
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion="$version" packaging/windows/installer.iss
+
+      - name: Compute SHA-256 Checksum
+        shell: pwsh
+        run: |
+          Get-ChildItem dist/installers/*.exe | ForEach-Object {
+            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower()
+            "$hash  $($_.Name)" | Out-File -FilePath "$($_.FullName).sha256" -Encoding ascii
+            Write-Host "$($_.Name): $hash"
+          }
+
+      - name: Upload Windows Artifacts to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/installers/*.exe
+            dist/installers/*.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-macos:
+    name: Build macOS Disk Image (DMG)
+    runs-on: macos-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install system dependencies
+        run: |
+          brew install ffmpeg libmagic create-dmg || true
+
+      - name: Install Python dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run automated test suite
+        run: pytest
+
+      - name: Build standalone desktop application (.app)
+        run: python3 scripts/build_desktop.py
+
+      - name: Build macOS DMG installer
+        run: |
+          chmod +x packaging/macos/create_dmg.sh
+          ./packaging/macos/create_dmg.sh
+
+      - name: Compute SHA-256 Checksum
+        run: |
+          cd dist/installers
+          for f in *.dmg; do
+            shasum -a 256 "$f" > "$f.sha256"
+            cat "$f.sha256"
+          done
+
+      - name: Upload macOS Artifacts to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/installers/*.dmg
+            dist/installers/*.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

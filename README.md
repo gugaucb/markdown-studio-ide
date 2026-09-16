@@ -6,7 +6,7 @@
 
 [![CI Status](https://github.com/gugaucb/markdown-studio-ide/actions/workflows/ci.yml/badge.svg)](https://github.com/gugaucb/markdown-studio-ide/actions)
 [![Docker Image](https://img.shields.io/badge/docker-gugaucb%2Fmarkdown--studio--ide-blue?logo=docker)](https://hub.docker.com/r/gugaucb/markdown-studio-ide)
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/gugaucb/markdown-studio-ide/releases)
+[![Version](https://img.shields.io/badge/version-1.1.0-green.svg)](https://github.com/gugaucb/markdown-studio-ide/releases)
 [![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![i18n](https://img.shields.io/badge/i18n-EN%20%7C%20PT--BR%20%7C%20ZH--CN-orange)](ui/locales/)
@@ -138,7 +138,7 @@ pytest
 - [x] Docker & Docker Compose setup
 - [x] GitHub Actions CI & DockerHub workflows
 - [x] SemVer release `v1.0.0`
-- [ ] Desktop packaging (native installers for Windows `.exe` / macOS `.dmg` via PyWebView/Electron)
+- [x] Desktop packaging (native installers for Windows `.exe` / macOS `.dmg` via PyWebView)
 - [ ] Batch folder watch daemon
 
 ---

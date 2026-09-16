@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-09-16
+
+### Added
+- **Desktop Packaging & Native Installers**: Standalone desktop app powered by PyWebView (`desktop.py`), resilient port allocation with graceful ASGI shutdown hooks, PyInstaller multi-platform build specification (`markitdown_studio.spec`) with embedded neural models, build automation CLI (`scripts/build_desktop.py`), Windows Inno Setup installer recipe (`.exe`), macOS Apple Disk Image recipe (`.dmg`), multi-resolution app icons (`packaging/icons/`), automated GitHub Actions release packaging workflow (`desktop-release.yml`), and comprehensive packaging guide (`docs/desktop-packaging.md`).
+
 ## [1.0.0] - 2026-09-16
 
 ### Added

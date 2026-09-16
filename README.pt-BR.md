@@ -6,7 +6,7 @@
 
 [![CI Status](https://github.com/gugaucb/markdown-studio-ide/actions/workflows/ci.yml/badge.svg)](https://github.com/gugaucb/markdown-studio-ide/actions)
 [![Docker Image](https://img.shields.io/badge/docker-gugaucb%2Fmarkdown--studio--ide-blue?logo=docker)](https://hub.docker.com/r/gugaucb/markdown-studio-ide)
-[![Version](https://img.shields.io/badge/vers%C3%A3o-1.0.0-green.svg)](https://github.com/gugaucb/markdown-studio-ide/releases)
+[![Version](https://img.shields.io/badge/vers%C3%A3o-1.1.0-green.svg)](https://github.com/gugaucb/markdown-studio-ide/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![i18n](https://img.shields.io/badge/i18n-EN%20%7C%20PT--BR%20%7C%20ZH--CN-orange)](ui/locales/)
 

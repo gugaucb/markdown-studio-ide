@@ -12,11 +12,12 @@ import uvicorn
 
 from services.markitdown_service import MarkItDownService
 from services.file_manager import FileManager
+from services.resource_utils import get_resource_path
 
 from version import __version__
 
-# Workspace Path
-WORKSPACE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Workspace Path (compatível com dev local e pacotes congelados PyInstaller)
+WORKSPACE_DIR = get_resource_path()
 file_manager = FileManager(WORKSPACE_DIR)
 DEFAULT_LLM_MODEL = os.environ.get("DEFAULT_LLM_MODEL", "gemma4:26b")
 DEFAULT_BASE_URL = os.environ.get("OPENAI_BASE_URL", "http://127.0.0.1:11434/v1")
